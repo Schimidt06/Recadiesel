@@ -14,26 +14,73 @@
         font-family: 'Inter', sans-serif;
         background-color: #09090b;
         color: #f4f4f5;
+        position: relative;
       }
+      
+      /* Granulação Metálica de Fundo */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        opacity: 0.03;
+        pointer-events: none;
+        z-index: 1;
+      }
+
       .font-display {
         font-family: 'Oswald', sans-serif;
       }
+      
       .glass-card {
         background: rgba(24, 24, 27, 0.8);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(63, 63, 70, 0.4);
       }
-      .checkered-bg {
-        background-image: linear-gradient(45deg, #18181b 25%, transparent 25%), 
-                          linear-gradient(-45deg, #18181b 25%, transparent 25%), 
-                          linear-gradient(45deg, transparent 75%, #18181b 75%), 
-                          linear-gradient(-45deg, transparent 75%, #18181b 75%);
-        background-size: 20px 20px;
-        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      
+      /* Efeito de Reflexo de Cabine (Melhorado) */
+      .reflection-text {
+        position: relative;
+        background: linear-gradient(
+          to right,
+          #666 0%,
+          #fff 45%,
+          #fff 55%,
+          #666 100%
+        );
+        background-size: 200% auto;
+        color: #000;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 4s ease-in-out infinite;
+        text-shadow: 0 0 30px rgba(255,255,255,0.1);
       }
-      /* Custom focus styles for brand color */
-      input:focus, select:focus, textarea:focus {
-        box-shadow: 0 0 0 2px rgba(161, 42, 46, 0.2);
+
+      .reflection-text-red {
+        position: relative;
+        background: linear-gradient(
+          to right,
+          #600 0%,
+          #A12A2E 40%,
+          #ff8888 50%,
+          #A12A2E 60%,
+          #600 100%
+        );
+        background-size: 200% auto;
+        color: #000;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 4s ease-in-out infinite;
+      }
+
+      @keyframes shine {
+        0% { background-position: -100% center; }
+        100% { background-position: 100% center; }
       }
 
       /* Animação de rotação 3D para o Modal */
