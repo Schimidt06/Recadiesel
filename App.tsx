@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { 
   Wrench, 
@@ -441,9 +440,12 @@ const App: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#A12A2E]/10 border border-[#A12A2E]/20 text-[#A12A2E] text-[8px] md:text-[10px] font-black uppercase tracking-widest">
               <Zap size={12} className="md:w-[14px]" /> Atendimento em Jaú-SP
             </div>
-            <h1 className="text-4xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-black leading-[0.9] uppercase italic tracking-tighter text-white">
+            {/* Reduzido de text-4xl sm:text-7xl md:text-8xl lg:text-9xl para os tamanhos abaixo para evitar cortes */}
+            <h1 className="text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black leading-[1.2] uppercase italic tracking-tighter text-white">
               <span className="reflection-text">RESTAURANDO</span> <br />
-              <span className="reflection-text-red not-italic">O PADRÃO</span> <br />
+              <div className="my-2 md:my-3">
+                <span className="reflection-text-red not-italic">O PADRÃO</span>
+              </div>
               <span className="reflection-text">DE FÁBRICA.</span>
             </h1>
             <p className="text-sm md:text-xl text-zinc-400 font-light border-l-2 md:border-l-4 border-[#A12A2E] pl-4 md:pl-8 max-w-xl italic leading-relaxed">
