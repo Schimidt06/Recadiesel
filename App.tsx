@@ -28,7 +28,8 @@ import {
   ChevronDown,
   Car,
   Plus,
-  Maximize2
+  Maximize2,
+  ArrowDown
 } from 'lucide-react';
 
 // --- Helper Functions ---
@@ -103,7 +104,8 @@ const CustomCursor = () => {
       setIsPointer(
         window.getComputedStyle(target).cursor === 'pointer' || 
         target.tagName === 'A' || 
-        target.tagName === 'BUTTON'
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'SELECT'
       );
     };
 
@@ -376,7 +378,14 @@ const faqs = [
 const App: React.FC = () => {
   const [selectedService, setSelectedService] = useState<any>(null);
   const [damageParts, setDamageParts] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ nome: '', celular: '', modelo: '', ano: '', servico: 'Funilaria e Pintura', descricao: '' });
+  const [formData, setFormData] = useState({ 
+    nome: '', 
+    celular: '', 
+    modelo: '', 
+    ano: '', 
+    servico: 'Funilaria e Pintura Completa', 
+    descricao: '' 
+  });
   
   const WHATSAPP_NUMBER = '5514996551728';
   const GOOGLE_MAPS_URL = 'https://www.google.com/maps/dir//Av.+Caetano+Perlati,+693+-+Vila+Nossa+Sra.+de+Fatima,+Ja%C3%BA+-+SP,+17210-441/@-22.2858167,-48.560611,17z/data=!4m8!4m7!1m0!1m5!1m1!1s0x94b8bcb8432a674d:0xc9e4695e20d20739!2m2!1d-48.560611!2d-22.2858167';
@@ -397,6 +406,17 @@ const App: React.FC = () => {
     { label: 'Parachoque', icon: <Wrench size={18} /> }
   ];
 
+  const serviceOptions = [
+    'Pintura Premium',
+    'Retoque Localizado',
+    'Funilaria e Pintura Completa',
+    'Martelinho de Ouro',
+    'Recuperação de Para-choque',
+    'Polimento Técnico / Cristalização',
+    'Higienização de Faróis',
+    'Sinistro (Seguradora)'
+  ];
+
   const togglePart = (label: string) => {
     setDamageParts(prev => 
       prev.includes(label) 
@@ -405,10 +425,16 @@ const App: React.FC = () => {
     );
   };
 
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Permite apenas números e a barra /
+    const val = e.target.value.replace(/[^0-9/]/g, '');
+    setFormData({ ...formData, ano: val });
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const partsText = damageParts.length > 0 ? `📍 Partes: ${damageParts.join(', ')}\n` : '';
-    const message = `Olá! Orçamento Recadiesel:\n👤 Nome: ${formData.nome}\n📱 Cel: ${formData.celular}\n🚗 Veículo: ${formData.modelo}\n${partsText}🛠️ Serviço: ${formData.servico}\n📝 Descrição: ${formData.descricao}`;
+    const partsText = damageParts.length > 0 ? `📍 Partes com Dano: ${damageParts.join(', ')}\n` : '';
+    const message = `Olá! Orçamento Recadiesel:\n👤 Nome: ${formData.nome}\n📱 Cel: ${formData.celular}\n🚗 Modelo: ${formData.modelo}\n📅 Ano: ${formData.ano}\n🛠️ Serviço: ${formData.servico}\n${partsText}📝 Descrição: ${formData.descricao}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -440,7 +466,6 @@ const App: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#A12A2E]/10 border border-[#A12A2E]/20 text-[#A12A2E] text-[8px] md:text-[10px] font-black uppercase tracking-widest">
               <Zap size={12} className="md:w-[14px]" /> Atendimento em Jaú-SP
             </div>
-            {/* Reduzido de text-4xl sm:text-7xl md:text-8xl lg:text-9xl para os tamanhos abaixo para evitar cortes */}
             <h1 className="text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black leading-[1.2] uppercase italic tracking-tighter text-white">
               <span className="reflection-text">RESTAURANDO</span> <br />
               <div className="my-2 md:my-3">
@@ -498,26 +523,49 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Interactive Simulator */}
-      <section className="py-16 md:py-24 px-4 md:px-12 bg-zinc-950/40">
-        <div className="container mx-auto text-center">
-          <h3 className="text-2xl md:text-5xl font-display font-black uppercase italic tracking-tighter mb-8">Onde está o <span className="text-[#A12A2E]">Dano?</span></h3>
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10">
+      {/* Interactive Simulator Linked to Form */}
+      <section className="py-16 md:py-24 px-4 md:px-12 bg-zinc-950/40 relative">
+        <div className="container mx-auto text-center space-y-12">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A12A2E]/10 border border-[#A12A2E]/20 text-[#A12A2E] text-[10px] font-black uppercase tracking-widest">
+              Passo 01: Identificação
+            </div>
+            <h3 className="text-2xl md:text-5xl font-display font-black uppercase italic tracking-tighter">Onde está o <span className="text-[#A12A2E]">Dano?</span></h3>
+            <p className="text-zinc-500 text-[10px] md:text-sm uppercase tracking-widest font-bold">Selecione as partes para incluir no orçamento</p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4">
             {carParts.map((part) => (
               <button 
                 key={part.label}
                 onClick={() => togglePart(part.label)}
-                className={`flex flex-col items-center gap-2 md:gap-3 px-4 py-6 md:px-6 md:py-8 rounded-xl md:rounded-2xl border transition-all min-w-[100px] md:min-w-[150px] active:scale-95 ${
+                className={`flex flex-col items-center gap-2 md:gap-3 px-4 py-6 md:px-6 md:py-8 rounded-xl md:rounded-2xl border transition-all min-w-[100px] md:min-w-[150px] active:scale-95 relative group ${
                   damageParts.includes(part.label) 
-                  ? 'bg-[#A12A2E] border-[#A12A2E] text-white shadow-xl' 
+                  ? 'bg-[#A12A2E] border-[#A12A2E] text-white shadow-[0_0_20px_rgba(161,42,46,0.4)]' 
                   : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
                 }`}
               >
-                {part.icon}
+                {damageParts.includes(part.label) && (
+                  <CheckCircle2 size={16} className="absolute top-2 right-2 text-white animate-pulse" />
+                )}
+                <div className="transition-transform group-hover:scale-110 duration-300">
+                  {part.icon}
+                </div>
                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">{part.label}</span>
               </button>
             ))}
           </div>
+
+          {damageParts.length > 0 && (
+            <div className="animate-bounce pt-4">
+              <button 
+                onClick={() => scrollToId('contato')}
+                className="bg-white text-zinc-950 px-8 py-4 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-[#A12A2E] hover:text-white transition-all flex items-center gap-3 mx-auto"
+              >
+                Confirmar Partes e Ir para Dados <ArrowDown size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -536,11 +584,17 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact Form */}
+      {/* Contact Form - Step 02 */}
       <section id="contato" className="py-20 md:py-32 bg-[#0a0a0c] px-4 md:px-12 scroll-mt-24">
         <div className="container mx-auto grid lg:grid-cols-2 gap-16 md:gap-24 items-start">
           <div className="space-y-10 md:space-y-12">
-            <h3 className="text-4xl md:text-7xl font-display font-black uppercase italic tracking-tighter leading-tight text-center lg:text-left">VAMOS <br /><span className="text-[#A12A2E]">RESTAURAR?</span></h3>
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A12A2E]/10 border border-[#A12A2E]/20 text-[#A12A2E] text-[10px] font-black uppercase tracking-widest">
+                Passo 02: Dados do Orçamento
+              </div>
+              <h3 className="text-4xl md:text-7xl font-display font-black uppercase italic tracking-tighter leading-tight text-center lg:text-left">VAMOS <br /><span className="text-[#A12A2E]">RESTAURAR?</span></h3>
+            </div>
+            
             <div className="space-y-4">
               {faqs.map((faq, i) => <FAQItem key={i} question={faq.q} answer={faq.a} />)}
             </div>
@@ -549,14 +603,79 @@ const App: React.FC = () => {
                <div className="flex items-center justify-center lg:justify-start gap-4 md:gap-6"><Phone className="text-[#A12A2E] w-5 h-5" /> <span className="font-bold text-sm md:text-lg">(14) 99655-1728</span></div>
             </div>
           </div>
-          <div className="glass-card p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] border border-zinc-800 shadow-2xl">
-            <h4 className="text-xl md:text-2xl font-display font-black uppercase italic mb-6 md:mb-8 text-center lg:text-left">Entrar em Contato</h4>
+          
+          <div className="glass-card p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] border border-zinc-800 shadow-2xl relative">
+            {damageParts.length > 0 && (
+              <div className="absolute -top-4 -right-4 bg-[#A12A2E] text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase shadow-xl animate-pulse z-10">
+                {damageParts.length} Partes Selecionadas
+              </div>
+            )}
+            
+            <h4 className="text-xl md:text-2xl font-display font-black uppercase italic mb-6 md:mb-8 text-center lg:text-left">Finalizar Orçamento</h4>
+            
             <form className="space-y-4 md:space-y-6" onSubmit={handleFormSubmit}>
-              <input required placeholder="Seu Nome" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, nome: e.target.value})} />
-              <input required placeholder="WhatsApp" type="tel" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, celular: e.target.value})} />
-              <input required placeholder="Modelo do Veículo" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, modelo: e.target.value})} />
-              <textarea required rows={3} placeholder="Descrição rápida..." className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all resize-none text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, descricao: e.target.value})} />
-              <button type="submit" className="w-full bg-[#A12A2E] hover:bg-red-700 text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest transition-all cursor-none active:scale-95 text-xs md:text-sm">Enviar WhatsApp</button>
+              {/* NOME E WHATSAPP */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">Nome Completo</span>
+                  <input required placeholder="Digite seu nome" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, nome: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">WhatsApp (Só números)</span>
+                  <input required placeholder="14999999999" type="tel" pattern="[0-9]*" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" value={formData.celular} onChange={e => setFormData({...formData, celular: e.target.value.replace(/[^0-9]/g, '')})} />
+                </div>
+              </div>
+              
+              {/* TIPO DE SERVIÇO */}
+              <div className="space-y-1">
+                <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">Tipo de Serviço</span>
+                <select 
+                  className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none appearance-none"
+                  value={formData.servico}
+                  onChange={e => setFormData({...formData, servico: e.target.value})}
+                >
+                  {serviceOptions.map(opt => <option key={opt} value={opt} className="bg-zinc-900 text-white">{opt}</option>)}
+                </select>
+              </div>
+
+              {/* MODELO E ANO */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 space-y-1">
+                  <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">Modelo do Veículo</span>
+                  <input required placeholder="Ex: Toyota Corolla" className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, modelo: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">Ano (Ex: 2024/2025)</span>
+                  <input required placeholder="2024/2025" value={formData.ano} className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base cursor-none" onChange={handleYearChange} />
+                </div>
+              </div>
+              
+              {/* PARTES SELECIONADAS NO SIMULADOR */}
+              {damageParts.length > 0 && (
+                <div className="p-3 bg-zinc-900/50 rounded-lg border border-[#A12A2E]/20">
+                  <span className="text-[9px] uppercase font-black text-zinc-500 block mb-2">Partes Identificadas no Simulador:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {damageParts.map(p => (
+                      <span key={p} className="text-[10px] bg-[#A12A2E]/20 text-[#A12A2E] px-2 py-1 rounded font-bold uppercase tracking-tighter">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                <span className="text-[8px] uppercase font-black text-zinc-500 ml-2 tracking-widest">Descrição Adicional (Opcional)</span>
+                <textarea rows={2} placeholder="Descreva brevemente o ocorrido..." className="w-full bg-zinc-900 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all resize-none text-sm md:text-base cursor-none" onChange={e => setFormData({...formData, descricao: e.target.value})} />
+              </div>
+              
+              <button type="submit" className="w-full bg-[#A12A2E] hover:bg-red-700 text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-[0.2em] transition-all cursor-none active:scale-95 text-[10px] md:text-xs flex items-center justify-center gap-3">
+                Enviar Orçamento para WhatsApp <MessageSquare size={16} />
+              </button>
+              
+              <p className="text-[8px] text-zinc-600 text-center uppercase tracking-widest">
+                Ao enviar, nosso técnico receberá todos os detalhes para agilizar sua cotação.
+              </p>
             </form>
           </div>
         </div>
