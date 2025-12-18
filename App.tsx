@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { 
   Wrench, 
-  Car, 
   Palette, 
   ShieldCheck, 
   Zap, 
@@ -13,779 +12,407 @@ import {
   MessageSquare, 
   MapPin, 
   Phone, 
-  Clock, 
   CheckCircle2,
-  Menu,
   X,
   ArrowRight,
-  Navigation,
-  PhoneCall,
-  Shield,
+  MoveHorizontal,
   Gauge,
-  ExternalLink
+  ArrowUpRight,
+  Star,
+  ExternalLink,
+  Instagram,
+  Facebook,
+  Search,
+  CheckCircle
 } from 'lucide-react';
 
-// --- Types ---
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  fullDescription: string;
-  icon: React.ReactNode;
-  items: string[];
-  image: string;
-}
-
-// --- Components ---
+// --- Helper Functions ---
+const scrollToId = (id: string) => {
+  const element = document.getElementById(id.replace('#', ''));
+  if (element) {
+    const offset = 80;
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - offset;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+  }
+};
 
 const Logo = ({ className = "" }: { className?: string }) => (
-  <div className={`group flex items-center gap-3 select-none ${className}`}>
+  <div 
+    onClick={() => scrollToId('inicio')}
+    className={`group flex items-center gap-2 md:gap-3 select-none cursor-pointer ${className}`}
+  >
     <div className="relative">
-      <div className="relative flex items-center justify-center w-11 h-11 bg-zinc-100 rounded-xl transform -rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-[4px_4px_0px_rgba(161,42,46,1)]">
-        <Gauge className="text-[#A12A2E] w-7 h-7" strokeWidth={2.5} />
-        <div className="absolute -bottom-1 -right-1 bg-zinc-950 p-1 rounded-md border border-zinc-800 shadow-xl group-hover:scale-110 transition-transform">
-          <Wrench className="w-3 h-3 text-[#A12A2E]" />
-        </div>
+      <div className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 bg-zinc-100 rounded-lg shadow-[2px_2px_0px_rgba(161,42,46,1)] md:shadow-[3px_3px_0px_rgba(161,42,46,1)]">
+        <Gauge className="text-[#A12A2E] w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
       </div>
     </div>
-    
     <div className="flex flex-col leading-none">
-      <div className="flex items-baseline">
-        <span className="font-display font-black text-2xl md:text-3xl tracking-tighter text-white uppercase italic">
-          RECA<span className="text-[#A12A2E] not-italic">DIESEL</span>
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="h-[2px] w-6 bg-[#A12A2E]"></div>
-        <span className="text-[10px] md:text-[11px] uppercase font-black tracking-[0.25em] text-zinc-400">
-          Premium Repair
-        </span>
-      </div>
+      <span className="font-display font-black text-lg md:text-2xl tracking-tighter text-white uppercase italic">
+        RECA<span className="text-[#A12A2E] not-italic">DIESEL</span>
+      </span>
+      <span className="text-[7px] md:text-[9px] uppercase font-black tracking-[0.2em] text-zinc-500">Premium Repair</span>
     </div>
   </div>
 );
 
-/**
- * ServiceCard com Efeito Parallax 3D Multicamadas e Iluminação Dinâmica
- */
-const ServiceCard: React.FC<{ service: Service; onOpen: (s: Service) => void }> = ({ service, onOpen }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const [lightPos, setLightPos] = useState({ x: 50, y: 50 });
-  const [isHovering, setIsHovering] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // Sensibilidade controlada para profundidade pronunciada sem tontura
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 10; 
-    const rotateY = (centerX - x) / 10;
-    
-    setRotate({ x: rotateX, y: rotateY });
-    
-    // Posição da iluminação (follow cursor)
-    const lightX = (x / rect.width) * 100;
-    const lightY = (y / rect.height) * 100;
-    setLightPos({ x: lightX, y: lightY });
-  };
-
-  const handleMouseEnter = () => setIsHovering(true);
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setRotate({ x: 0, y: 0 });
-  };
-
-  return (
-    <div 
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{ 
-        perspective: '1500px',
-        transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale(${isHovering ? 1.03 : 1})`,
-        transition: isHovering ? 'transform 0.1s ease-out' : 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
-        transformStyle: 'preserve-3d'
-      }}
-      className="group relative glass-card p-8 rounded-3xl border border-zinc-800 flex flex-col h-full overflow-hidden cursor-default transition-all duration-300 hover:shadow-[0_40px_80px_-15px_rgba(161,42,46,0.25)] hover:border-[#A12A2E]/50"
-    >
-      {/* Luz Reativa (Glow de Superfície) */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-        style={{
-          background: `radial-gradient(circle at ${lightPos.x}% ${lightPos.y}%, rgba(161,42,46,0.25) 0%, transparent 60%)`
-        }}
-      />
-
-      {/* Camada superior flutuante (Ícone) */}
-      <div 
-        className="mb-8 p-4 bg-[#A12A2E]/10 rounded-2xl w-fit text-[#A12A2E] shadow-xl border border-[#A12A2E]/10"
-        style={{ 
-          transform: isHovering ? `translateZ(80px)` : `translateZ(0px)`,
-          transition: 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)'
-        }}
-      >
-        {service.icon}
-      </div>
-      
-      {/* Título flutuante */}
-      <h3 
-        className="text-2xl md:text-3xl font-display font-bold mb-4 tracking-wide uppercase italic text-white drop-shadow-2xl"
-        style={{ 
-          transform: isHovering ? `translateZ(60px)` : `translateZ(0px)`,
-          transition: 'transform 0.45s cubic-bezier(0.23, 1, 0.32, 1)'
-        }}
-      >
-        {service.title}
-      </h3>
-      
-      {/* Conteúdo com profundidade intermediária */}
-      <div 
-        className="flex-grow"
-        style={{ 
-          transform: isHovering ? `translateZ(40px)` : `translateZ(0px)`,
-          transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)'
-        }}
-      >
-        <p className="text-zinc-400 text-sm md:text-base mb-6 font-light leading-relaxed">
-          {service.description}
-        </p>
-        
-        <ul className="space-y-3 mb-8">
-          {service.items.slice(0, 3).map((item, idx) => (
-            <li key={idx} className="flex items-start gap-3 text-sm text-zinc-300">
-              <CheckCircle2 className="w-5 h-5 text-[#A12A2E] mt-0.5 shrink-0" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Botão na camada de topo */}
-      <button 
-        onClick={() => onOpen(service)}
-        style={{ 
-          transform: isHovering ? `translateZ(100px)` : `translateZ(0px)`,
-          transition: 'transform 0.3s cubic-bezier(0.23, 1, 0.32, 1)'
-        }}
-        className="mt-auto w-full py-4 bg-zinc-800 hover:bg-[#A12A2E] text-white rounded-2xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 shadow-2xl border border-zinc-700/50"
-      >
-        Saber mais <ArrowRight className="w-5 h-5" />
-      </button>
-    </div>
-  );
-};
-
-const ServiceModal: React.FC<{ service: Service | null; onClose: () => void; onContact: (s: string) => void }> = ({ service, onClose, onContact }) => {
+const ServiceModal: React.FC<{ service: any | null; onClose: () => void; onContact: (s: string) => void }> = ({ service, onClose, onContact }) => {
   if (!service) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/95 backdrop-blur-xl">
       <div className="absolute inset-0" onClick={onClose} />
-      
-      {/* Modal com a animação Flip-In definida no HTML */}
-      <div className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] animate-flip-in">
-        <button 
-          onClick={onClose}
-          className="absolute top-6 right-6 p-2 bg-zinc-800 hover:bg-[#A12A2E] rounded-full transition-colors z-20 shadow-xl"
-        >
-          <X className="w-6 h-6 text-white" />
+      <div className="relative w-full max-w-xl bg-[#0c0c0e] border border-zinc-800 rounded-3xl md:rounded-[2.5rem] overflow-hidden animate-flip-in shadow-2xl max-h-[90vh] overflow-y-auto">
+        <button onClick={onClose} className="absolute top-4 right-4 md:top-8 md:right-8 p-2 md:p-3 bg-zinc-900 rounded-full z-20 cursor-pointer hover:bg-red-600 transition-colors shadow-xl text-white">
+          <X size={18} />
         </button>
-
-        <div className="h-56 md:h-72 relative overflow-hidden">
-          <img src={service.image} alt={service.title} className="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-1000 scale-105 hover:scale-100" />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/10 to-transparent" />
-          <div className="absolute bottom-8 left-8">
-            <div className="mb-4 p-4 bg-[#A12A2E] rounded-2xl w-fit text-white shadow-2xl">
+        
+        <div className="p-8 md:p-12 space-y-8 md:space-y-10">
+          <div>
+            <div className="inline-block p-3 md:p-4 bg-[#A12A2E]/10 rounded-xl md:rounded-2xl text-[#A12A2E] mb-4 md:mb-6">
               {service.icon}
             </div>
-            <h2 className="text-4xl md:text-5xl font-display font-black text-white uppercase italic tracking-tighter drop-shadow-2xl">{service.title}</h2>
-          </div>
-        </div>
-
-        <div className="p-8 md:p-10 space-y-8">
-          <div className="space-y-4">
-            <h4 className="text-[#A12A2E] font-bold uppercase tracking-widest text-xs flex items-center gap-3">
-              <span className="w-12 h-[1px] bg-[#A12A2E]"></span> Expertise Técnica
-            </h4>
-            <p className="text-zinc-300 leading-relaxed text-base md:text-lg font-light italic">
+            <h2 className="text-3xl md:text-4xl font-display font-black text-white uppercase italic tracking-tighter leading-none mb-4">
+              {service.title}
+            </h2>
+            <p className="text-zinc-400 text-sm md:text-base leading-relaxed font-light italic border-l-2 border-[#A12A2E] pl-4 md:pl-6">
               "{service.fullDescription}"
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {service.items.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-sm md:text-base text-zinc-400 bg-zinc-950/40 p-4 rounded-2xl border border-zinc-800/50 hover:border-[#A12A2E]/40 transition-all">
-                <CheckCircle2 className="w-5 h-5 text-[#A12A2E] shrink-0" />
-                <span>{item}</span>
+          <div className="grid grid-cols-1 gap-3 md:gap-4">
+            {service.items.map((item: string, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 md:gap-4 text-xs md:text-sm text-zinc-300 bg-zinc-900/50 p-3 md:p-4 rounded-xl border border-zinc-800">
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-[#A12A2E] shrink-0" /> {item}
               </div>
             ))}
           </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row gap-4">
-            <button 
-              onClick={() => onContact(service.title)}
-              className="flex-1 bg-[#A12A2E] hover:bg-[#8B2428] text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-[0_10px_30px_rgba(161,42,46,0.35)] hover:scale-[1.02] active:scale-95"
-            >
-              <MessageSquare className="w-6 h-6" /> Orçamento via WhatsApp
-            </button>
-            <button 
-              onClick={onClose}
-              className="px-10 py-5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl font-bold transition-all active:scale-95"
-            >
-              Voltar
-            </button>
-          </div>
+          <button onClick={() => onContact(service.title)} className="w-full bg-[#A12A2E] hover:bg-red-700 text-white py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 md:gap-4 cursor-pointer shadow-xl active:scale-95">
+            <MessageSquare size={18} /> Orçamento via WhatsApp
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+const BeforeAfterSlider = () => {
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mustangImg = "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=1200";
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  const handleMove = useCallback((clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    setSliderPos((x / rect.width) * 100);
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-zinc-950/90 backdrop-blur-xl py-4 shadow-2xl border-b border-zinc-800' : 'bg-transparent py-6'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <Logo />
-
-        <div className="hidden lg:flex items-center gap-10">
-          <a href="#inicio" className="text-sm font-semibold hover:text-[#A12A2E] transition-colors uppercase tracking-widest">Início</a>
-          <a href="#servicos" className="text-sm font-semibold hover:text-[#A12A2E] transition-colors uppercase tracking-widest">Serviços</a>
-          <a href="#seguradoras" className="text-sm font-semibold hover:text-[#A12A2E] transition-colors uppercase tracking-widest">Seguros</a>
-          <a href="#contato" className="bg-[#A12A2E] hover:bg-[#8B2428] text-white px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all transform hover:scale-110 shadow-[0_0_20px_rgba(161,42,46,0.4)]">
-            Solicitar Orçamento
-          </a>
-        </div>
-
-        <button className="lg:hidden text-white p-2" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={32} /> : <Menu size={32} />}
-        </button>
+    <div 
+      ref={containerRef}
+      onMouseMove={(e) => handleMove(e.clientX)}
+      onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+      className="relative w-full aspect-video rounded-2xl md:rounded-[2.5rem] overflow-hidden border border-zinc-800/50 cursor-none select-none shadow-2xl group bg-zinc-900"
+    >
+      <div className="absolute inset-0">
+        <img src={mustangImg} alt="Depois" className="w-full h-full object-cover brightness-105 contrast-110" />
+        <div className="absolute top-4 right-4 md:top-6 md:right-8 bg-zinc-950/80 px-3 py-1 md:px-5 md:py-1.5 rounded-full text-[8px] md:text-[10px] font-black text-white z-20 border border-white/10 uppercase tracking-[0.2em] backdrop-blur-md">PERFEIÇÃO</div>
       </div>
-
-      {isOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-zinc-800 py-10 px-8 space-y-6 shadow-2xl animate-in slide-in-from-top duration-500">
-          <a href="#inicio" onClick={() => setIsOpen(false)} className="block text-2xl font-display font-bold py-3 uppercase italic">Início</a>
-          <a href="#servicos" onClick={() => setIsOpen(false)} className="block text-2xl font-display font-bold py-3 uppercase italic">Serviços</a>
-          <a href="#seguradoras" onClick={() => setIsOpen(false)} className="block text-2xl font-display font-bold py-3 uppercase italic">Seguradoras</a>
-          <a href="#contato" onClick={() => setIsOpen(false)} className="block bg-[#A12A2E] text-white p-5 rounded-2xl text-center font-black uppercase tracking-widest text-lg">Orçamento Agora</a>
+      <div className="absolute inset-0 z-10 border-r-2 border-[#A12A2E] shadow-[5px_0_15px_rgba(0,0,0,0.4)] overflow-hidden" style={{ width: `${sliderPos}%` }}>
+        <div className="absolute inset-0" style={{ width: `${100 / (sliderPos / 100)}%`, height: '100%' }}>
+          <img src={mustangImg} alt="Antes" className="w-full h-full object-cover grayscale-[0.4] brightness-[0.7] contrast-[0.95]" />
+          <div className="absolute inset-0 bg-zinc-950/20 mix-blend-multiply" />
         </div>
-      )}
-    </nav>
+        <div className="absolute top-4 left-4 md:top-6 md:left-8 bg-[#A12A2E] px-3 py-1 md:px-5 md:py-1.5 rounded-full text-[8px] md:text-[10px] font-black text-white z-20 uppercase tracking-[0.2em] shadow-xl">PASSADO</div>
+      </div>
+      <div className="absolute top-0 bottom-0 z-20 w-0 pointer-events-none" style={{ left: `${sliderPos}%` }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-[#A12A2E] rounded-full shadow-2xl flex items-center justify-center border-2 md:border-4 border-zinc-950 transition-transform group-hover:scale-110">
+          <MoveHorizontal className="text-white w-4 h-4 md:w-5 md:h-5" />
+        </div>
+      </div>
+    </div>
   );
 };
 
+const ServiceCard: React.FC<{ service: any; index: number; onOpen: (s: any) => void }> = ({ service, index, onOpen }) => (
+  <div 
+    onClick={() => onOpen(service)}
+    className="group relative flex flex-col justify-between min-h-[360px] md:h-[420px] rounded-[1.5rem] md:rounded-[2rem] bg-zinc-900/30 border border-zinc-800/50 p-6 md:p-10 cursor-pointer transition-all duration-300 hover:border-[#A12A2E] hover:bg-zinc-900/60 hover:shadow-2xl hover:-translate-y-2 active:scale-[0.98] md:active:scale-100"
+  >
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex justify-between items-start">
+        <div className="p-3 md:p-4 bg-zinc-950 rounded-xl md:rounded-2xl text-[#A12A2E] border border-zinc-800/50 group-hover:bg-[#A12A2E] group-hover:text-white transition-colors duration-300">
+          {service.icon}
+        </div>
+        <span className="font-display text-3xl md:text-4xl font-black text-white/5 uppercase italic group-hover:text-[#A12A2E]/20 transition-colors">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
+
+      <div>
+        <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter mb-2 md:mb-3 leading-tight group-hover:text-[#A12A2E] transition-colors">
+          {service.title}
+        </h3>
+        <p className="text-zinc-400 text-xs md:text-sm font-light leading-relaxed mb-4 md:mb-6">
+          {service.description}
+        </p>
+
+        <ul className="space-y-2">
+          {service.items.slice(0, 3).map((item: string, idx: number) => (
+            <li key={idx} className="flex items-center gap-2 text-[10px] md:text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300 transition-colors uppercase tracking-wider">
+              <CheckCircle2 size={10} className="text-[#A12A2E]" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white pt-4 md:pt-6 border-t border-zinc-800 group-hover:border-[#A12A2E]/30 transition-colors mt-4">
+      Mais Detalhes <ArrowUpRight size={12} className="text-[#A12A2E]" />
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [formData, setFormData] = useState({
-    nome: '',
-    celular: '',
-    anoModelo: '',
-    servico: 'Funilaria e Pintura',
-    descricao: ''
-  });
-
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [formData, setFormData] = useState({ nome: '', celular: '', modelo: '', ano: '', servico: 'Funilaria e Pintura', descricao: '' });
   const WHATSAPP_NUMBER = '5514996551728';
-  const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Av.+Caetano+Perlati,+693+-+Jardim+Estadio,+Ja%C3%BA+-+SP";
+  const GOOGLE_MAPS_URL = 'https://www.google.com/maps/dir//Av.+Caetano+Perlati,+693+-+Vila+Nossa+Sra.+de+Fatima,+Ja%C3%BA+-+SP,+17210-441/@-22.2858167,-48.560611,17z/data=!4m8!4m7!1m0!1m5!1m1!1s0x94b8bcb8432a674d:0xc9e4695e20d20739!2m2!1d-48.560611!2d-22.2858167';
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const services = [
+    { id: 'lataria', title: 'Reparos de Lataria', description: 'Recuperação estrutural técnica e alinhamento de precisão.', fullDescription: 'Utilizamos tecnologia de ponta para restaurar a integridade física do seu veículo, garantindo segurança e o alinhamento original de fábrica.', icon: <Layers size={24} />, items: ['Recuperação Monobloco', 'Alinhamento Técnico', 'Troca de Painéis', 'Solda MIG Especializada'] },
+    { id: 'martelinho', title: 'Martelinho de Ouro', description: 'A arte artesanal de remover amassados sem pintura.', fullDescription: 'Remoção de pequenas mossas e amassados de granizo ou batidas leves mantendo 100% da originalidade da pintura.', icon: <Sparkles size={24} />, items: ['Danos de Granizo', 'Batidas de Porta', 'Preservação de Pintura', 'Acabamento Fino'] },
+    { id: 'pintura', title: 'Pintura Premium', description: 'Acabamento de alto brilho em cabine climatizada.', fullDescription: 'Processo rigoroso de pintura com laboratório próprio de cores e secagem em cabine pressurizada para evitar impurezas.', icon: <Palette size={24} />, items: ['Colorimetria Digital', 'Verniz High Solid', 'Cabine Pressurizada', 'Padrão OEM'] },
+    { id: 'estrutural', title: 'Recuperação Técnica', description: 'Correções complexas em chassis e longarinas.', fullDescription: 'Intervenções profundas para veículos com danos estruturais severos, devolvendo a geometria correta do veículo.', icon: <Settings size={24} />, items: ['Gabarito de Chassi', 'Estirador Hidráulico', 'Reforço Estrutural', 'Laudo Técnico'] },
+    { id: 'colisao', title: 'Sinistro / Seguro', description: 'Assessoria completa para reparos via seguradoras.', fullDescription: 'Facilitamos todo o trâmite com a sua seguradora, priorizando a qualidade e a agilidade na entrega do seu veículo.', icon: <Siren size={24} />, items: ['Credenciamento Total', 'Gestão de Peças', 'Relatórios p/ Seguros', 'Agilidade Prioritária'] }
+  ];
 
-  const handleContactWhatsApp = (serviceTitle: string) => {
-    const message = `Olá Recadiesel! Vi o serviço de *${serviceTitle}* no site e gostaria de solicitar um orçamento para o meu veículo.`;
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
-  };
+  const processSteps = [
+    { title: 'Diagnóstico', icon: <Search size={20} />, text: 'Avaliação técnica detalhada do dano e estrutura.' },
+    { title: 'Preparação', icon: <Settings size={20} />, text: 'Proteção total e preparação minuciosa da superfície.' },
+    { title: 'Execução', icon: <Palette size={20} />, text: 'Aplicação técnica com precisão milimétrica.' },
+    { title: 'Finalização', icon: <CheckCircle size={20} />, text: 'Polimento premium e controle de qualidade final.' }
+  ];
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const message = `Olá Recadiesel! Gostaria de um orçamento rápido:
-*Nome:* ${formData.nome}
-*Celular:* ${formData.celular}
-*Veículo:* ${formData.anoModelo}
-*Serviço:* ${formData.servico}
-*O que ocorreu:* ${formData.descricao}`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+    const message = `Olá! Gostaria de um orçamento:\n\n👤 Nome: ${formData.nome}\n📱 Celular: ${formData.celular}\n🚗 Veículo: ${formData.modelo} (${formData.ano})\n🛠️ Serviço: ${formData.servico}\n📝 Descrição: ${formData.descricao}`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const services: Service[] = [
-    {
-      id: 'lataria',
-      title: 'Reparos de Lataria',
-      description: 'Recuperamos a estrutura e o acabamento original com precisão milimétrica.',
-      fullDescription: 'Especialistas em recuperação de metais. Utilizamos equipamentos de tração e gabaritos originais para assegurar que cada milímetro da carroceria retorne ao seu estado de fábrica, preservando as zonas de deformação programada e a segurança estrutural.',
-      icon: <Layers className="w-10 h-10" />,
-      items: ['Amassados leves a graves', 'Recuperação de peças originais', 'Alinhamento de carroceria', 'Substituição técnica'],
-      image: 'https://images.unsplash.com/photo-1549317336-206569e8475c?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'martelinho',
-      title: 'Martelinho de Ouro',
-      description: 'Solução artesanal para pequenos danos, mantendo a pintura intocada.',
-      fullDescription: 'A arte da funilaria a frio. Ideal para amassados onde a tinta não sofreu fissuras. Nossa técnica artesanal permite remover danos causados por granizo ou batidas de porta sem a necessidade de lixamento ou repintura, valorizando o veículo.',
-      icon: <Sparkles className="w-10 h-10" />,
-      items: ['Danos causados por granizo', 'Batidas de porta em estacionamento', 'Preservação do valor venal', 'Rapidez na entrega'],
-      image: 'https://images.unsplash.com/photo-1590496793907-39b722bb3a1f?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'pintura',
-      title: 'Pintura Automotiva',
-      description: 'Acabamento profissional de alto brilho com cabine de secagem controlada.',
-      fullDescription: 'Utilizamos sistema de pintura base água eco-friendly e laboratório de tintas próprio. Nossa cabine de pintura de última geração com pressão positiva garante um ambiente livre de poeira para um acabamento liso, brilhante e sem imperfeições.',
-      icon: <Palette className="w-10 h-10" />,
-      items: ['Acerto de cor computadorizado', 'Cabine de pintura técnica', 'Verniz de alta resistência', 'Padrão original de fábrica'],
-      image: 'https://images.unsplash.com/photo-1621905252507-b352220264b3?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'estrutural',
-      title: 'Recuperação Estrutural',
-      description: 'Reparos técnicos de alta complexidade em chassis e longarinas.',
-      fullDescription: 'Segurança em primeiro lugar. Em colisões severas, utilizamos a mesa alinhadora e sistemas de medição a laser para garantir que o monobloco do veículo esteja perfeitamente alinhado, garantindo a estabilidade e dirigibilidade original.',
-      icon: <Settings className="w-10 h-10" />,
-      items: ['Correção de longarinas', 'Alinhamento em mesa técnica', 'Soldas especiais MIG/MAG', 'Certificação de segurança'],
-      image: 'https://images.unsplash.com/photo-1517524206127-48bbd363f3d7?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'colisao',
-      title: 'Serviços Pós-Colisão',
-      description: 'Atendimento integral e suporte técnico após acidentes e sinistros.',
-      fullDescription: 'Simplificamos o processo após um acidente. Oferecemos desde o guincho até a perícia técnica. Trabalhamos em conjunto com reguladores de seguros para garantir que todos os danos, inclusive os ocultos, sejam devidamente reparados.',
-      icon: <Siren className="w-10 h-10" />,
-      items: ['Avaliação técnica profunda', 'Suporte perante seguradoras', 'Logística de peças rápida', 'Transparência total'],
-      image: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-      id: 'estetica',
-      title: 'Estética Automotiva',
-      description: 'Proteção extrema e polimento técnico para brilho duradouro.',
-      fullDescription: 'Cuidado premium com o acabamento. Realizamos polimento técnico em múltiplos estágios para remover micro-riscos e vitrificação de pintura com nanotecnologia, criando uma camada de proteção hidrofóbica e brilho profundo.',
-      icon: <Zap className="w-10 h-10" />,
-      items: ['Polimento técnico 3M', 'Vitrificação Ceramic Coating', 'Espelhamento de pintura', 'Higienização de interiores'],
-      image: 'https://images.unsplash.com/photo-1601362840469-51e4d8d59085?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'plastico',
-        title: 'Reparos em Plástico',
-        description: 'Recuperação técnica de para-choques e peças em fibra.',
-        fullDescription: 'Evite a troca desnecessária de peças originais. Utilizamos solda plástica de alta fusão e reforços de polímeros para recuperar rachaduras e quebras em componentes plásticos, garantindo resistência e acabamento invisível.',
-        icon: <Wrench className="w-10 h-10" />,
-        items: ['Solda plástica térmica', 'Recuperação de para-choques', 'Reparos em fibra de vidro', 'Texturização original'],
-        image: 'https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: 'especiais',
-        title: 'Projetos Especiais',
-        description: 'Cuidado personalizado para restaurações e customizações.',
-        fullDescription: 'Para quem ama seu carro. Realizamos restaurações parciais, tratamento anticorrosivo rigoroso em chassis e aplicações de pinturas especiais. Cada projeto é tratado como uma obra de arte única por nossos mestres funileiros.',
-        icon: <Car className="w-10 h-10" />,
-        items: ['Correção de ferrugem técnica', 'Tratamento anticorrosivo', 'Personalização de cores', 'Restauração de clássicos'],
-        image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800'
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-[#A12A2E] selection:text-white">
-      <Navbar />
-
-      <ServiceModal 
-        service={selectedService} 
-        onClose={() => setSelectedService(null)} 
-        onContact={handleContactWhatsApp}
-      />
-
-      {/* Hero Section */}
-      <section id="inicio" className="relative min-h-screen flex items-center pt-24 overflow-hidden px-6">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920" 
-            alt="Oficina de Luxo" 
-            className="w-full h-full object-cover opacity-25 grayscale"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent" />
-        </div>
-
-        <div className="container mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-10 max-w-3xl">
-            <div className="inline-flex items-center gap-3 bg-[#A12A2E]/10 border border-[#A12A2E]/20 px-6 py-2 rounded-full">
-              <span className="w-3 h-3 bg-[#A12A2E] rounded-full animate-pulse" />
-              <span className="text-xs font-black text-[#A12A2E] uppercase tracking-[0.3em]">Referência em Jaú e Região</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-black leading-[0.95] tracking-tighter uppercase italic drop-shadow-2xl">
-              RESTAURANDO <br />
-              <span className="text-[#A12A2E] not-italic">PERFEIÇÃO</span> <br />
-              TÉCNICA.
-            </h1>
-            
-            <p className="text-lg md:text-2xl text-zinc-400 font-light leading-relaxed max-w-xl border-l-4 border-[#A12A2E] pl-6">
-              Mestres em funilaria pesada e estética de alto padrão. Onde a tecnologia automotiva encontra o cuidado artesanal.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-6">
-              <a href="#contato" className="bg-[#A12A2E] hover:bg-[#8B2428] text-white px-10 py-5 rounded-2xl font-black text-xl transition-all transform hover:scale-105 shadow-[0_15px_30px_rgba(161,42,46,0.4)] flex items-center justify-center gap-3">
-                Solicitar Orçamento <ArrowRight className="w-6 h-6" />
-              </a>
-              <a href="#servicos" className="bg-zinc-800/50 backdrop-blur-md hover:bg-zinc-700 border border-zinc-700 px-10 py-5 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3">
-                Nossas Soluções
-              </a>
-            </div>
-
-            <div className="grid grid-cols-3 gap-8 pt-10 border-t border-zinc-800/40">
-                <div className="space-y-1">
-                    <p className="text-3xl md:text-4xl font-display font-black italic text-white">+25 anos</p>
-                    <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Experiência</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-3xl md:text-4xl font-display font-black italic text-white">12k+</p>
-                    <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Reparos</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-3xl md:text-4xl font-display font-black italic text-[#A12A2E]">100%</p>
-                    <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Garantia</p>
-                </div>
-            </div>
+    <div className="min-h-screen bg-[#0c0c0e] text-zinc-100 selection:bg-[#A12A2E] overflow-x-hidden">
+      {/* Header */}
+      <nav className="fixed top-0 left-0 right-0 z-50 py-4 md:py-6 px-4 md:px-6 transition-all duration-300 bg-zinc-950/60 backdrop-blur-xl border-b border-zinc-800/50">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Logo />
+          <div className="flex items-center gap-4 md:gap-10">
+            <a href="#servicos" onClick={(e) => {e.preventDefault(); scrollToId('servicos');}} className="hidden sm:block text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:text-[#A12A2E] transition-colors cursor-pointer">Serviços</a>
+            <a href="#contato" onClick={(e) => {e.preventDefault(); scrollToId('contato');}} className="relative group overflow-hidden bg-[#A12A2E] text-white px-5 py-2 md:px-8 md:py-2.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] hover:bg-red-700 transition-all shadow-[0_0_20px_rgba(161,42,46,0.3)] active:scale-95 cursor-pointer">
+              <span className="relative z-10">Orçamento</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+            </a>
           </div>
-          
-          <div className="hidden lg:block relative group">
-            <div className="absolute -inset-10 bg-[#A12A2E]/20 rounded-full blur-[120px] group-hover:bg-[#A12A2E]/30 transition-all duration-700" />
-            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-zinc-800 rotate-2 group-hover:rotate-0 transition-all duration-1000">
-               <img 
-                 src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&q=80&w=800" 
-                 alt="Carro Esportivo de Luxo" 
-                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-1000"
-               />
+        </div>
+      </nav>
+
+      <ServiceModal service={selectedService} onClose={() => setSelectedService(null)} onContact={(t) => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Olá! Gostaria de um orçamento para: ${t}`)} />
+
+      {/* Hero */}
+      <section id="inicio" className="relative min-h-[90vh] md:min-h-screen flex items-center pt-20 px-6 md:px-12">
+        <div className="absolute inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center opacity-10 grayscale" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e]/70 to-transparent" />
+        <div className="container mx-auto relative z-10">
+          <div className="max-w-4xl space-y-6 md:space-y-8">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-black leading-[0.9] md:leading-[0.85] uppercase italic tracking-tighter text-white">
+              RESTAURANDO <br />
+              <span className="text-[#A12A2E] not-italic">O PADRÃO</span> <br />
+              DE FÁBRICA.
+            </h1>
+            <p className="text-base md:text-xl text-zinc-400 font-light border-l-2 md:border-l-4 border-[#A12A2E] pl-4 md:pl-8 max-w-xl leading-relaxed italic">
+              Excelência técnica em funilaria e pintura premium em Jaú-SP. Compromisso com a perfeição em cada detalhe.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <button onClick={() => scrollToId('contato')} className="bg-[#A12A2E] hover:bg-red-700 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl md:rounded-2xl font-black text-sm md:text-lg transition-all shadow-xl active:scale-95 cursor-pointer flex items-center justify-center gap-3">Solicitar Orçamento <ArrowRight size={20} /></button>
+              <button onClick={() => scrollToId('servicos')} className="bg-zinc-900/50 border border-zinc-800 px-8 py-4 md:px-10 md:py-5 rounded-xl md:rounded-2xl font-black text-sm md:text-lg hover:bg-zinc-800 transition-all cursor-pointer backdrop-blur-sm">Conhecer Serviços</button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section id="servicos" className="py-24 md:py-40 bg-zinc-950 relative overflow-hidden px-6">
-        <div className="absolute inset-0 checkered-bg opacity-[0.03] pointer-events-none" />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#A12A2E]/5 rounded-full blur-[150px] -z-10" />
-        
-        <div className="container mx-auto relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
-            <div className="space-y-6">
-              <h2 className="text-[#A12A2E] font-black uppercase tracking-[0.4em] text-sm flex items-center gap-4">
-                <span className="w-16 h-[2px] bg-[#A12A2E]"></span> Performance Extrema
-              </h2>
-              <p className="text-4xl md:text-6xl lg:text-7xl font-display font-black leading-[1] uppercase italic tracking-tighter">
-                SOLUÇÕES DE <br />
-                <span className="text-[#A12A2E] not-italic">ALTA PRECISÃO</span>
+      {/* Trust Marks */}
+      <div className="py-12 bg-zinc-950/50 border-y border-zinc-900 overflow-hidden">
+        <div className="container mx-auto px-6">
+          <p className="text-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600 mb-8">Nossos Insumos de Alta Performance</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-30 grayscale contrast-125">
+             <span className="font-display text-2xl md:text-4xl font-bold">3M</span>
+             <span className="font-display text-2xl md:text-4xl font-bold italic">GLASURIT</span>
+             <span className="font-display text-2xl md:text-4xl font-bold">PPG</span>
+             <span className="font-display text-2xl md:text-4xl font-bold italic">NORTON</span>
+             <span className="font-display text-2xl md:text-4xl font-bold">WANDA</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Before/After Slider */}
+      <section className="py-16 md:py-24 bg-[#0c0c0e] px-6 md:px-12">
+        <div className="container mx-auto">
+          <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <div className="space-y-6 md:space-y-8 order-2 lg:order-1 text-center lg:text-left">
+              <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                <Star className="text-[#A12A2E] fill-[#A12A2E]" size={14} />
+                <h2 className="text-[#A12A2E] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[10px] md:text-xs">A Arte do Reencontro</h2>
+              </div>
+              <h3 className="text-4xl md:text-7xl font-display font-black uppercase italic tracking-tighter leading-none">SEU CARRO <br /><span className="text-[#A12A2E]">COMO NOVO</span></h3>
+              <p className="text-zinc-100 text-lg md:text-xl leading-relaxed font-semibold italic border-l-0 lg:border-l-4 border-[#A12A2E] lg:pl-6 py-2">
+                Fala a verdade: você ainda se lembra daquela sensação de tirar seu carro zero?
+              </p>
+              <p className="text-zinc-400 text-sm md:text-lg leading-relaxed font-light">
+                Esqueça o amassado ou a batida. Na Recadiesel, resgatamos a dignidade da sua máquina. Deslize e veja a transformação.
               </p>
             </div>
-            <p className="text-zinc-500 max-w-md text-base md:text-lg border-l-2 border-zinc-800 pl-8 font-light italic leading-relaxed">
-              Equipamentos de nível mundial e técnicos certificados pelas principais montadoras para garantir que seu carro receba o melhor tratamento possível.
-            </p>
+            <div className="order-1 lg:order-2">
+              <BeforeAfterSlider />
+            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {services.map(service => (
-              <ServiceCard key={service.id} service={service} onOpen={setSelectedService} />
+      {/* Process Section */}
+      <section className="py-24 bg-zinc-950/30 px-6 md:px-12">
+        <div className="container mx-auto">
+          <h3 className="text-center text-3xl md:text-5xl font-display font-black uppercase italic tracking-tighter mb-16">NOSSO <span className="text-[#A12A2E]">PROCESSO</span></h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {processSteps.map((step, idx) => (
+              <div key={idx} className="relative group p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800 hover:border-[#A12A2E] transition-all">
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center font-display font-black text-xl text-[#A12A2E] group-hover:scale-110 transition-transform">
+                  {idx + 1}
+                </div>
+                <div className="mb-6 text-[#A12A2E]">{step.icon}</div>
+                <h4 className="text-xl font-display font-black uppercase italic mb-3">{step.title}</h4>
+                <p className="text-xs text-zinc-500 font-light leading-relaxed">{step.text}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Insurance Section */}
-      <section id="seguradoras" className="py-24 md:py-40 bg-zinc-900/40 px-6 relative">
+      {/* Services */}
+      <section id="servicos" className="py-20 md:py-32 px-6 md:px-12 scroll-mt-20 md:scroll-mt-24">
         <div className="container mx-auto">
-          <div className="glass-card rounded-[3rem] p-8 md:p-20 border-l-[12px] border-l-[#A12A2E] flex flex-col lg:flex-row items-center gap-16 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-[#A12A2E]/5 to-transparent pointer-events-none" />
-            
-            <div className="flex-1 space-y-10">
-              <div className="bg-[#A12A2E]/10 p-5 rounded-2xl w-fit shadow-[0_10px_30px_rgba(161,42,46,0.15)]">
-                <ShieldCheck className="w-12 h-12 text-[#A12A2E]" />
-              </div>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter uppercase italic leading-[1]">
-                CREDENCIADOS PELAS <br />
-                <span className="text-[#A12A2E] not-italic underline decoration-4 underline-offset-8">PRINCIPAIS SEGURADORAS</span>
-              </h2>
-              <p className="text-zinc-400 text-lg md:text-xl leading-relaxed font-light">
-                Agilidade na regulação do sinistro e foco na originalidade. Cuidamos de toda a parte burocrática junto à sua seguradora para que você se preocupe apenas em voltar a dirigir.
-              </p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[
-                  'Regulação técnica expressa',
-                  'Vistorias periciais por imagem',
-                  'Fidelidade total às peças originais',
-                  'Desconto em franquias selecionadas',
-                  'Certificado de garantia Recadiesel',
-                  'Atendimento prioritário ao segurado'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-4 text-zinc-300">
-                    <CheckCircle2 className="w-6 h-6 text-[#A12A2E] shrink-0" />
-                    <span className="text-base md:text-lg font-semibold tracking-wide uppercase italic">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="lg:w-2/5 w-full bg-zinc-950/80 backdrop-blur-2xl p-10 md:p-12 rounded-[2.5rem] border border-zinc-800 space-y-8 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-               <div className="flex items-center justify-between">
-                 <h4 className="text-2xl font-black flex items-center gap-4 uppercase font-display italic text-white">
-                   <Clock className="text-[#A12A2E] w-8 h-8" /> Suporte 24h
-                 </h4>
-                 <div className="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Online</div>
-               </div>
-               <p className="text-base text-zinc-400 font-light leading-relaxed">Sinistrado? Não perca tempo. Fale agora com nossa central de atendimento especializada em seguros e receba o suporte necessário.</p>
-               <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" className="w-full py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(34,197,94,0.3)] hover:scale-105">
-                 Falar com Especialista <MessageSquare className="w-6 h-6" />
-               </a>
-            </div>
+          <div className="flex flex-col items-center text-center mb-12 md:mb-20 space-y-3 md:space-y-4">
+            <h2 className="text-[#A12A2E] font-black uppercase tracking-[0.4em] md:tracking-[0.5em] text-[10px] md:text-xs">Especialidades</h2>
+            <h3 className="text-4xl md:text-8xl font-display font-black uppercase italic tracking-tighter mb-2 md:mb-4">SOLUÇÕES <span className="text-[#A12A2E]">TÉCNICAS</span></h3>
+            <div className="w-16 md:w-24 h-1 bg-[#A12A2E]" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {services.map((s, idx) => <ServiceCard key={s.id} service={s} index={idx} onOpen={setSelectedService} />)}
           </div>
         </div>
       </section>
 
-      {/* Contact & Map Section */}
-      <section id="contato" className="py-24 md:py-40 bg-zinc-950 px-6 overflow-hidden">
+      {/* Showroom Gallery */}
+      <section className="py-24 px-6 md:px-12 bg-[#0c0c0e]">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-20 items-start">
-            <div className="space-y-12">
-              <div className="space-y-6">
-                <h2 className="text-[#A12A2E] font-black uppercase tracking-[0.4em] text-sm">Visite Nossa Unidade</h2>
-                <h3 className="text-5xl md:text-7xl font-display font-black uppercase tracking-tighter italic leading-[1]">JAÚ <br /><span className="text-[#A12A2E] not-italic">SÃO PAULO</span></h3>
-                <p className="text-zinc-400 text-lg font-light max-w-lg leading-relaxed border-l-2 border-zinc-800 pl-8">Localizada estrategicamente para atender toda a região central do estado com rapidez e eficiência técnica.</p>
-              </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div className="aspect-[4/5] rounded-3xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 group cursor-crosshair">
+                <img src="https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Job 1" />
+             </div>
+             <div className="aspect-[4/5] rounded-3xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 group cursor-crosshair translate-y-8">
+                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Job 2" />
+             </div>
+             <div className="aspect-[4/5] rounded-3xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 group cursor-crosshair">
+                <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Job 3" />
+             </div>
+             <div className="aspect-[4/5] rounded-3xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 group cursor-crosshair translate-y-8">
+                <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Job 4" />
+             </div>
+          </div>
+        </div>
+      </section>
 
-              {/* Map Iframe */}
-              <div className="relative group rounded-[2.5rem] overflow-hidden border border-zinc-800 h-[400px] md:h-[500px] w-full shadow-[0_50px_100px_rgba(0,0,0,0.6)]">
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3688.423927233816!2d-48.5447781!3d-22.280922!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94b8ac3e70669719%3A0xc665768e7f101235!2sAv.%20Caetano%20Perlati%2C%20693%20-%20Jardim%20Estadio%2C%20Ja%C3%BA%20-%20SP%2C%2017203-370!5e0!3m2!1spt-BR!2sbr!4v1740600000000!5m2!1spt-BR!2sbr" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }} 
-                  allowFullScreen={true} 
-                  loading="lazy" 
-                  title="Recadiesel Location"
-                ></iframe>
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 pointer-events-none" />
-                <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                  <a 
-                    href={MAPS_URL} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-full bg-[#A12A2E] text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-4 shadow-2xl uppercase tracking-widest"
-                  >
-                    <Navigation className="w-6 h-6" /> Abrir no Google Maps
-                  </a>
-                </div>
-              </div>
+      {/* Location */}
+      <section id="localizacao" className="py-16 md:py-24 bg-[#0c0c0e] px-4 md:px-12 border-t border-zinc-900/40 scroll-mt-20 md:scroll-mt-24">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-12 gap-6 text-center md:text-left">
+            <div className="space-y-3 md:space-y-4">
+              <h2 className="text-[#A12A2E] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[10px] md:text-xs">Visite nossa Oficina</h2>
+              <h3 className="text-3xl md:text-6xl font-display font-black uppercase italic tracking-tighter leading-none">ESTAMOS <br className="hidden md:block" /><span className="text-[#A12A2E]">PERTINHO</span> DE VOCÊ</h3>
+            </div>
+            <a href={GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="bg-zinc-900 border border-zinc-800 px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#A12A2E] hover:border-[#A12A2E] transition-all flex items-center gap-3 shadow-xl active:scale-95 group">
+              Abrir no Google Maps <ExternalLink size={14} className="group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+          <div className="relative w-full h-[300px] md:h-[500px] rounded-2xl md:rounded-[3rem] overflow-hidden border border-zinc-800 shadow-2xl group">
+             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3689.846513360492!2d-48.563185924705575!3d-22.285811779698966!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94b8bcb8432a674d%3A0xc9e4695e20d20739!2sAv.%20Caetano%20Perlati%2C%20693%20-%20Vila%20Nossa%20Sra.%20de%20Fatima%2C%20Ja%C3%BA%20-%20SP%2C%2017210-441!5e0!3m2!1spt-BR!2sbr!4v1710123456789!5m2!1spt-BR!2sbr&maptype=roadmap&style=feature:all|element:all|saturation:-100|lightness:-20|visibility:on" className="w-full h-full border-0 grayscale invert brightness-90 opacity-80 group-hover:opacity-100 transition-opacity duration-500" allowFullScreen={true} loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+             <div className="absolute inset-0 pointer-events-none border-4 md:border-[12px] border-zinc-950/20" />
+          </div>
+        </div>
+      </section>
 
-              <div className="grid sm:grid-cols-2 gap-12 pt-10">
-                <div className="flex items-start gap-6">
-                  <div className="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl group-hover:scale-110 transition-transform">
-                    <MapPin className="text-[#A12A2E] w-8 h-8" />
-                  </div>
-                  <div>
-                    <h5 className="text-xl font-black uppercase font-display italic text-white mb-2">Endereço</h5>
-                    <p className="text-zinc-400 text-base leading-relaxed font-light">Av. Caetano Perlati, 693<br />Jardim Estadio, Jaú - SP<br />CEP 17203-370</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-6">
-                  <div className="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl">
-                    <Phone className="text-[#A12A2E] w-8 h-8" />
-                  </div>
-                  <div>
-                    <h5 className="text-xl font-black uppercase font-display italic text-white mb-2">Atendimento</h5>
-                    <div className="text-zinc-400 text-base space-y-3 pt-1">
-                      <p className="flex items-center gap-3 font-semibold">
-                        <PhoneCall className="w-4 h-4 text-[#A12A2E]" />
-                        <span>(14) 3625-1273</span>
-                      </p>
-                      <p className="flex items-center gap-3 font-black text-[#A12A2E]">
-                        <MessageSquare className="w-4 h-4" />
-                        <span>(14) 99655-1728</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Contact Form */}
+      <section id="contato" className="py-20 md:py-32 bg-[#0a0a0c] px-6 md:px-12 scroll-mt-20 md:scroll-mt-24">
+        <div className="container mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 md:gap-20 items-center">
+            <div className="space-y-6 md:space-y-10 text-center lg:text-left">
+              <h3 className="text-4xl md:text-6xl font-display font-black uppercase italic tracking-tighter leading-tight">ORÇAMENTO <br className="md:hidden" /><span className="text-[#A12A2E]">EXPRESS</span></h3>
+              <p className="text-zinc-400 text-sm md:text-lg leading-relaxed max-w-md mx-auto lg:mx-0 font-light italic border-l-2 border-[#A12A2E] pl-4 md:pl-6">
+                "Não é apenas lataria, é a alma do seu veículo de volta à vida."
+              </p>
+              <div className="space-y-4 md:space-y-6 pt-4 text-left inline-block lg:block">
+                <div className="flex items-center gap-4 md:gap-6"><div className="p-3 md:p-4 bg-zinc-900 rounded-xl"><MapPin className="text-[#A12A2E]" size={20} /></div><p className="text-sm md:text-lg font-bold text-white">Av. Caetano Perlati, 693 - Jaú/SP</p></div>
+                <div className="flex items-center gap-4 md:gap-6"><div className="p-3 md:p-4 bg-zinc-900 rounded-xl"><Phone className="text-[#A12A2E]" size={20} /></div><p className="text-sm md:text-lg font-bold text-white">(14) 99655-1728</p></div>
               </div>
             </div>
-
-            {/* Quote Form */}
-            <div className="glass-card p-10 md:p-16 rounded-[3rem] relative overflow-hidden border border-zinc-800 shadow-[0_50px_100px_rgba(0,0,0,0.6)]">
-                <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#A12A2E]" />
-                <div className="mb-12">
-                  <h4 className="text-3xl md:text-4xl font-display font-black mb-4 uppercase tracking-tight text-white italic leading-tight">SOLICITAR <br /><span className="text-[#A12A2E] not-italic">AVALIAÇÃO TÉCNICA</span></h4>
-                  <p className="text-base text-zinc-500 font-light leading-relaxed">Envie os detalhes do seu veículo e receba um pré-orçamento detalhado diretamente no seu WhatsApp em instantes.</p>
+            <div className="glass-card p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] border border-zinc-800/40 shadow-2xl relative">
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#A12A2E]/10 rounded-full blur-3xl" />
+              <form className="space-y-4 md:space-y-6" onSubmit={handleFormSubmit}>
+                <input required placeholder="Nome Completo" className="w-full bg-zinc-900/30 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base" onChange={e => setFormData({...formData, nome: e.target.value})} />
+                <input required placeholder="Celular / WhatsApp" type="tel" className="w-full bg-zinc-900/30 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base" onChange={e => setFormData({...formData, celular: e.target.value})} />
+                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                  <input required placeholder="Veículo" className="w-full bg-zinc-900/30 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base" onChange={e => setFormData({...formData, modelo: e.target.value})} />
+                  <input required placeholder="Ano" className="w-full bg-zinc-900/30 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all text-sm md:text-base" onChange={e => setFormData({...formData, ano: e.target.value})} />
                 </div>
-                
-                <form className="space-y-6" onSubmit={handleFormSubmit}>
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-xs font-black uppercase text-zinc-500 tracking-widest">Seu Nome</label>
-                      <input 
-                        required 
-                        type="text" 
-                        name="nome"
-                        value={formData.nome}
-                        onChange={handleInputChange}
-                        placeholder="Nome Completo" 
-                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-[#A12A2E] transition-all text-white placeholder:text-zinc-700 font-medium" 
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-xs font-black uppercase text-zinc-500 tracking-widest">WhatsApp</label>
-                      <input 
-                        required 
-                        type="tel" 
-                        name="celular"
-                        value={formData.celular}
-                        onChange={handleInputChange}
-                        placeholder="(14) 99999-9999" 
-                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-[#A12A2E] transition-all text-white placeholder:text-zinc-700 font-medium" 
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-xs font-black uppercase text-zinc-500 tracking-widest">Veículo e Ano</label>
-                    <input 
-                      required 
-                      type="text" 
-                      name="anoModelo"
-                      value={formData.anoModelo}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Audi A3 2022 Branco" 
-                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-[#A12A2E] transition-all text-white placeholder:text-zinc-700 font-medium" 
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-xs font-black uppercase text-zinc-500 tracking-widest">Tipo de Serviço</label>
-                    <div className="relative">
-                      <select 
-                        name="servico"
-                        value={formData.servico}
-                        onChange={handleInputChange}
-                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-[#A12A2E] transition-all text-white appearance-none font-medium"
-                      >
-                        <option>Funilaria e Pintura</option>
-                        <option>Martelinho de Ouro</option>
-                        <option>Reparo de Para-choque</option>
-                        <option>Estética / Polimento</option>
-                        <option>Sinistro / Seguro</option>
-                        <option>Restauração / Especial</option>
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600">
-                        <ArrowRight className="w-5 h-5 rotate-90" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-xs font-black uppercase text-zinc-500 tracking-widest">Descreva o Dano</label>
-                    <textarea 
-                      required 
-                      rows={4} 
-                      name="descricao"
-                      value={formData.descricao}
-                      onChange={handleInputChange}
-                      placeholder="Conte-nos o que aconteceu com o seu veículo..." 
-                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 focus:outline-none focus:border-[#A12A2E] transition-all text-white placeholder:text-zinc-700 resize-none font-medium leading-relaxed"
-                    ></textarea>
-                  </div>
-                  <button type="submit" className="w-full py-6 bg-[#A12A2E] hover:bg-[#8B2428] text-white rounded-2xl font-black text-xl transition-all shadow-[0_20px_40px_rgba(161,42,46,0.35)] flex items-center justify-center gap-4 uppercase tracking-widest group">
-                    Enviar para Consultor <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                  </button>
-                  <p className="text-[10px] text-zinc-700 text-center uppercase font-black tracking-[0.4em] mt-6 italic">
-                    Avaliação rápida via WhatsApp
-                  </p>
-                </form>
+                <textarea required rows={3} placeholder="Descrição rápida do reparo necessário..." className="w-full bg-zinc-900/30 border-b border-zinc-800 py-3 md:py-4 px-2 focus:outline-none focus:border-[#A12A2E] text-white transition-all resize-none text-sm md:text-base" onChange={e => setFormData({...formData, descricao: e.target.value})} />
+                <button type="submit" className="w-full bg-[#A12A2E] hover:bg-red-700 text-white py-4 md:py-5 rounded-xl font-black uppercase tracking-widest transition-all cursor-pointer shadow-xl active:scale-95 text-xs md:text-sm">Enviar Dados via WhatsApp</button>
+              </form>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-zinc-950 pt-32 pb-16 border-t border-zinc-900 px-6">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-4 gap-20 mb-20">
-            <div className="col-span-1 md:col-span-2 space-y-8">
-              <Logo />
-              <p className="text-zinc-500 max-w-md text-lg leading-relaxed font-light italic">
-                "Não apenas consertamos carros, restauramos a confiança e a satisfação de dirigir um veículo impecável. Compromisso Recadiesel com a excelência desde 1999."
-              </p>
-              <div className="flex gap-6">
-                {[
-                  { icon: <MessageSquare />, link: `https://wa.me/${WHATSAPP_NUMBER}` },
-                  { icon: <ShieldCheck />, link: "#seguradoras" },
-                  { icon: <Navigation />, link: MAPS_URL }
-                ].map((social, idx) => (
-                  <a key={idx} href={social.link} target="_blank" className="bg-zinc-900 p-4 rounded-xl hover:bg-[#A12A2E] transition-all border border-zinc-800 text-zinc-400 hover:text-white hover:-translate-y-2 shadow-xl">
-                    {social.icon}
-                  </a>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-8">
-              <h5 className="font-black text-xl font-display uppercase italic text-white tracking-widest">Acesso Rápido</h5>
-              <ul className="space-y-4 text-zinc-500 text-base font-bold uppercase italic tracking-widest">
-                <li><a href="#inicio" className="hover:text-[#A12A2E] transition-all flex items-center gap-3 group"><span className="w-0 group-hover:w-4 h-[2px] bg-[#A12A2E] transition-all"></span> Home</a></li>
-                <li><a href="#servicos" className="hover:text-[#A12A2E] transition-all flex items-center gap-3 group"><span className="w-0 group-hover:w-4 h-[2px] bg-[#A12A2E] transition-all"></span> Serviços</a></li>
-                <li><a href="#seguradoras" className="hover:text-[#A12A2E] transition-all flex items-center gap-3 group"><span className="w-0 group-hover:w-4 h-[2px] bg-[#A12A2E] transition-all"></span> Seguros</a></li>
-                <li><a href="#contato" className="hover:text-[#A12A2E] transition-all flex items-center gap-3 group"><span className="w-0 group-hover:w-4 h-[2px] bg-[#A12A2E] transition-all"></span> Contato</a></li>
-              </ul>
-            </div>
-
-            <div className="space-y-8">
-              <h5 className="font-black text-xl font-display uppercase italic text-white tracking-widest">Horários</h5>
-              <div className="space-y-3 text-zinc-500 text-base font-medium">
-                <p className="flex justify-between items-center"><span className="text-zinc-400 font-black">Seg - Sex:</span> <span>08h às 18h</span></p>
-                <p className="flex justify-between items-center"><span className="text-zinc-400 font-black">Sábado:</span> <span>08h às 12h</span></p>
-                <div className="h-[1px] bg-zinc-800 w-full my-4"></div>
-                <p className="text-[#A12A2E] font-black uppercase tracking-widest text-xs">Suporte 24h via WhatsApp</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="pt-12 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p className="text-xs text-zinc-700 font-black uppercase tracking-[0.3em]">© 2024 Recadiesel Funilaria e Pintura Jaú - SP. Todos os direitos reservados.</p>
-            <div className="flex gap-10 text-[10px] text-zinc-700 uppercase font-black tracking-[0.5em]">
-              <a href="#" className="hover:text-white transition-colors">Termos</a>
-              <a href="#" className="hover:text-white transition-colors">Privacidade</a>
-            </div>
-          </div>
+      <footer className="py-12 md:py-16 bg-[#0c0c0e] border-t border-zinc-900/50 text-center px-6 flex flex-col items-center">
+        <Logo className="justify-center mb-6 md:mb-8" />
+        
+        <div className="flex gap-6 mb-8 text-zinc-500">
+           <a href="#" className="hover:text-[#A12A2E] transition-colors"><Instagram size={24} /></a>
+           <a href="#" className="hover:text-[#A12A2E] transition-colors"><Facebook size={24} /></a>
         </div>
+
+        <div className="mb-8 md:mb-10 w-full max-w-xs md:max-w-none">
+          <a href={GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="group inline-flex flex-col items-center gap-2 text-zinc-400 hover:text-white transition-all duration-300 w-full">
+            <div className="flex items-center justify-center gap-2 font-bold text-xs md:text-sm tracking-tighter uppercase italic text-center">
+              <MapPin size={16} className="text-[#A12A2E] shrink-0" />
+              Av. Caetano Perlati, 693 - Jaú/SP
+            </div>
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#A12A2E] flex items-center gap-1 group-hover:gap-3 transition-all">
+              Ver Rota no Google Maps <ArrowRight size={10} />
+            </span>
+          </a>
+        </div>
+
+        <p className="text-zinc-600 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">© 2024 Recadiesel Premium Repair | Jaú - SP</p>
       </footer>
 
-      {/* Floating WhatsApp Action */}
-      <a 
-        href={`https://wa.me/${WHATSAPP_NUMBER}`} 
-        target="_blank" 
-        className="fixed bottom-8 right-8 z-[60] bg-green-500 text-white p-5 md:p-6 rounded-[2rem] shadow-[0_20px_50px_rgba(34,197,94,0.5)] hover:shadow-[0_25px_60px_rgba(34,197,94,0.7)] hover:scale-110 active:scale-95 transition-all flex items-center gap-5 group"
-      >
-        <div className="hidden md:flex flex-col items-end border-r border-white/20 pr-5">
-          <span className="font-black text-sm uppercase tracking-widest mb-0.5">Orçamento Rápido</span>
-          <span className="text-[10px] opacity-90 font-black">(14) 99655-1728</span>
-        </div>
-        <div className="relative">
-          <MessageSquare className="w-8 h-8 md:w-10 md:h-10 fill-white/10" />
-          <span className="absolute -top-2 -right-2 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
-          </span>
-        </div>
+      {/* FAB WhatsApp */}
+      <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[100] bg-green-600 text-white p-4 md:p-5 rounded-full shadow-2xl hover:scale-110 active:scale-90 transition-all" aria-label="Contato via WhatsApp">
+        <MessageSquare size={24} className="md:w-7 md:h-7" />
       </a>
     </div>
   );
